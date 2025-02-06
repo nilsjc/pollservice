@@ -1,0 +1,3 @@
+dotnet new webapi -n Backend
+cd Backend
+dotnet dev-certs https --trust
