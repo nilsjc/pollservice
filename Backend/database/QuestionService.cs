@@ -1,31 +1,26 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Backend.interfaces;
 using Backend.Models;
-using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace Backend.database
 {
     public class QuestionService : IQuestionService
     {
-        public async Task<IEnumerable<QuestionDTO>> GetQuestions(string key)
+        private readonly IDatabaseService _service;
+
+        public QuestionService(IDatabaseService service)
         {
-            IEnumerable<QuestionDTO> result = new List<QuestionDTO>
-            {
-                new QuestionDTO
-                {
-                    QuestionKey = key,
-                    Text = "lufs lufs"
-                }
-            };
+            _service = service;
+        }
+
+        public async Task<IEnumerable<QuestionDTO>> SelectQuestions(string key)
+        {
+            var result = await _service.SelectQuestions(key);
             return result;
         }
 
-        public void InsertQuestion(QuestionDTO question, string key)
+        public async Task InsertQuestion(QuestionDTO question)
         {
-            throw new NotImplementedException();
+            await _service.InsertQuestion(question);
         }
     }
 }

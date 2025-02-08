@@ -9,6 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IQuestionService, QuestionService>();
+builder.Services.AddScoped<IDatabaseService>(s => new DbSqliteEngine("questions01"));
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

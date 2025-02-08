@@ -9,7 +9,7 @@ namespace Backend.interfaces
 {
     public interface IQuestionService
     {
-        Task<IEnumerable<QuestionDTO>> GetQuestions(string key);
-        void InsertQuestion(QuestionDTO question, string key);
+        Task<IEnumerable<QuestionDTO>> SelectQuestions(string key);
+        Task InsertQuestion(QuestionDTO question);
     }
 }

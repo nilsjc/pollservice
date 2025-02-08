@@ -8,14 +8,25 @@ using Microsoft.Data.Sqlite;
 
 namespace Backend.database
 {
-    public class DbSqliteEngine(string dbName)
+    public class DbSqliteEngine(string dbName) : IDatabaseService
     {
         public async Task InsertQuestion(QuestionDTO question)
         {
             using (var connection = new SqliteConnection($"Data Source={dbName}"))
-
+            {
+                connection.Open();
+                var command = connection.CreateCommand();
+                command.CommandText =
+                @$"
+                    INSERT INTO tblQuestions (questionkey, text, pollKey)
+                    VALUES(@qkey, @qtext, @pollkey)
+                ";
+                command.Parameters.AddWithValue("@key", question.QuestionKey);
+                command.Parameters.AddWithValue("@text", question.Text);
+                command.Parameters.AddWithValue("@pollkey", question.PollKey);
+            }
         }
-        public async Task<IEnumerable<QuestionDTO>> SelectQueries(string pollKey)
+        public async Task<IEnumerable<QuestionDTO>> SelectQuestions(string pollKey)
         {
             List<QuestionDTO> questions = [];
             using (var connection = new SqliteConnection($"Data Source={dbName}"))
@@ -24,8 +35,8 @@ namespace Backend.database
                 var command = connection.CreateCommand();
                 command.CommandText =
                 @$"
-                    SELECT questionkey, text
-                    FROM tblQueries WHERE pollkey = @pollkey
+                    SELECT questionkey, text, pollkey
+                    FROM tblQuestions WHERE pollkey = @pollkey
                 ";
                 command.Parameters.AddWithValue("@pollkey", pollKey);
                 using var reader = command.ExecuteReader();
@@ -34,7 +45,8 @@ namespace Backend.database
                     questions.Add(
                         new QuestionDTO(
                             reader.GetString(0),
-                            reader.GetString(1)));
+                            reader.GetString(1),
+                            reader.GetString(2)));
                 }
             }
             return questions;

@@ -14,6 +14,10 @@ namespace Backend.endpoints
             app.MapGet("/Questions", GetQuestions)
                 .WithName("GetQuestions")
                 .WithOpenApi();
+
+            app.MapPost("/Questions", PostQuestion)
+                .WithName("PostQuestions")
+                .WithOpenApi();
         }
         static async Task<IResult> GetQuestions(string pollKey, IQuestionService service)
         {
@@ -21,8 +25,13 @@ namespace Backend.endpoints
             {
                 return TypedResults.BadRequest("no spaces in pollKey name allowed");
             }
-            var result = await service.GetQuestions(pollKey);
+            var result = await service.SelectQuestions(pollKey);
             return TypedResults.Ok(result);
+        }
+        static async Task<IResult> PostQuestion(QuestionDTO qdto, IQuestionService service)
+        {
+            await service.InsertQuestion(qdto);
+            return TypedResults.Ok();
         }
     }
             
