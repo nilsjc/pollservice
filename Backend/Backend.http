@@ -2,5 +2,9 @@
 
 GET {{Backend_HostAddress}}/weatherforecast/
 Accept: application/json
+###
+@pollkey = nyamobilappen
+GET {{Backend_HostAddress}}/questions?pollKey={{pollkey}}
+Content-Type: application/json
 
 ###
