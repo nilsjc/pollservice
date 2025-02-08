@@ -23,7 +23,7 @@ namespace Backend.database
             return result;
         }
 
-        public void InsertQuestion(QuestionDTO question)
+        public void InsertQuestion(QuestionDTO question, string key)
         {
             throw new NotImplementedException();
         }
