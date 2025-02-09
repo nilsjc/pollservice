@@ -21,5 +21,6 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.RegisterQuestionsEndpoints();
+app.RegisterPollsEndpoints();
 
 app.Run();
