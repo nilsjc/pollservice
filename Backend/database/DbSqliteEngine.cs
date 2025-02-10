@@ -26,19 +26,19 @@ namespace Backend.database
                 command.CommandText =
                 @"CREATE TABLE IF NOT EXISTS tbl_poll 
                 (id INTEGER PRIMARY KEY, 
-                name TEXT);
+                name TEXT UNIQUE);
 
                 CREATE TABLE IF NOT EXISTS tbl_question 
                 (id INTEGER PRIMARY KEY,
                 tbl_poll_id INTEGER, 
-                qkey TEXT, 
+                qkey TEXT UNIQUE, 
                 text TEXT, 
                 FOREIGN KEY(tbl_poll_id) REFERENCES tbl_poll(id)
                 );
 
                 CREATE TABLE IF NOT EXISTS tbl_user 
                 (id INTEGER PRIMARY KEY,
-                name TEXT);
+                name TEXT UNIQUE);
 
                 CREATE TABLE IF NOT EXISTS tbl_answer
                 (id INTEGER PRIMARY KEY,
@@ -58,15 +58,27 @@ namespace Backend.database
             using (var connection = new SqliteConnection($"Data Source={DbName}"))
             {
                 connection.Open();
+                int pollId = 1;
                 var command = connection.CreateCommand();
                 command.CommandText =
-                @$"
-                    INSERT INTO tblQuestions (questionkey, text, pollKey)
-                    VALUES(@qkey, @qtext, @pollkey)
-                ";
-                command.Parameters.AddWithValue("@key", question.QuestionKey);
-                command.Parameters.AddWithValue("@text", question.Text);
+                @$"SELECT id FROM tbl_poll WHERE name = @pollkey";
                 command.Parameters.AddWithValue("@pollkey", question.PollKey);
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        pollId = reader.GetInt32(0);
+                    }
+                }
+                command.CommandText =
+                @$"
+                    INSERT INTO tbl_question (qkey, text, tbl_poll_id)
+                    VALUES(@qkey, @qtext, @pollid)
+                ";
+                command.Parameters.AddWithValue("@qkey", question.QuestionKey);
+                command.Parameters.AddWithValue("@qtext", question.Text);
+                command.Parameters.AddWithValue("@pollid", pollId);
+                command.ExecuteNonQuery();
             }
         }
         public async Task<IEnumerable<QuestionDTO>> SelectQuestions(string pollKey)
@@ -76,12 +88,13 @@ namespace Backend.database
             {
                 connection.Open();
                 var command = connection.CreateCommand();
+                var pollId = IdFromPollKeyExecuteCommand(command, pollKey);
                 command.CommandText =
                 @$"
-                    SELECT questionkey, text, pollkey
-                    FROM tblQuestions WHERE pollkey = @pollkey
+                    SELECT qkey, text
+                    FROM tbl_question WHERE tbl_poll_id = @pollId
                 ";
-                command.Parameters.AddWithValue("@pollkey", pollKey);
+                command.Parameters.AddWithValue("@pollId", pollId);
                 using var reader = command.ExecuteReader();
                 while (reader.Read())
                 {
@@ -89,7 +102,7 @@ namespace Backend.database
                         new QuestionDTO(
                             reader.GetString(0),
                             reader.GetString(1),
-                            reader.GetString(2)));
+                            pollKey));
                 }
             }
             return questions;
@@ -129,6 +142,21 @@ namespace Backend.database
                 }
             }
             return results;
+        }
+        private static int IdFromPollKeyExecuteCommand(SqliteCommand command, string pollKey)
+        {
+            int pollId = 0;
+            command.CommandText =
+            @$"SELECT id FROM tbl_poll WHERE name = @pollkey";
+            command.Parameters.AddWithValue("@pollkey", pollKey);
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    pollId = reader.GetInt32(0);
+                }
+            }
+            return pollId;
         }
     }
 }

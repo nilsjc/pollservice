@@ -1,12 +1,12 @@
 @Backend_HostAddress = http://localhost:5170
-@pollkey = nya_mobilappen
+@pollkey = mobil2000
 POST {{Backend_HostAddress}}/questions
 Content-Type: application/json
 
 {
     "QuestionKey" : "q2",
-    "Text" : "Do you recommend this to your worst enemy?",
-    "PollKey" : "nya_mobilappen"
+    "Text" : "Do you think this product looks cool?",
+    "PollKey" : "{{pollkey}}"
 }
 ###
 
@@ -14,7 +14,7 @@ GET {{Backend_HostAddress}}/questions?pollKey={{pollkey}}
 Content-Type: application/json
 
 ###
-POST {{Backend_HostAddress}}/Polls?pollkey=mobil2000
+POST {{Backend_HostAddress}}/Polls?pollkey={{pollkey}}
 Content-Type: application/json
 
 ###
