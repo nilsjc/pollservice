@@ -20,3 +20,13 @@ Content-Type: application/json
 ###
 GET {{Backend_HostAddress}}/Polls
 Content-Type: application/json
+
+### post json with answers
+POST {{Backend_HostAddress}}/Answers
+Content-Type: application/json
+
+{
+    "PollKey" : "{{pollkey}}",
+    "Answers" : [1,2,3,4,5],
+    "QKeys" : ["Q1","Q2","Q3","Q4","Q5"]
+}

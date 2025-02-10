@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Metadata.Ecma335;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading.Tasks;
 using Backend.Models;
 using Microsoft.Data.Sqlite;
@@ -88,7 +89,6 @@ namespace Backend.database
             {
                 connection.Open();
                 var command = connection.CreateCommand();
-                //var pollId = IdFromPollKeyExecuteCommand(command, pollKey);
                 command.CommandText =
                 @$"
                     SELECT qkey, text
@@ -96,7 +96,6 @@ namespace Backend.database
                     INNER JOIN tbl_poll WHERE tbl_poll.id = tbl_question.tbl_poll_id
                     AND tbl_poll.name = @pollKey
                 ";
-                //command.Parameters.AddWithValue("@pollId", pollId);
                 command.Parameters.AddWithValue("@pollKey", pollKey);
                 using var reader = command.ExecuteReader();
                 while (reader.Read())
@@ -146,20 +145,30 @@ namespace Backend.database
             }
             return results;
         }
-        private static int IdFromPollKeyExecuteCommand(SqliteCommand command, string pollKey)
+        public async Task PostAnswers(AnswerDbObject answersObj)
         {
-            int pollId = 0;
-            command.CommandText =
-            @$"SELECT id FROM tbl_poll WHERE name = @pollkey";
-            command.Parameters.AddWithValue("@pollkey", pollKey);
-            using (var reader = command.ExecuteReader())
+            using (var connection = new SqliteConnection($"Data Source={DbName}"))
             {
-                while (reader.Read())
+                connection.Open();
+                var userId = CreateUserIfNotExists();
+                var command = connection.CreateCommand();
+                StringBuilder sb = new();
+                foreach (var answer in answersObj.Answers)
                 {
-                    pollId = reader.GetInt32(0);
+                    sb.Append("(@qkey,@vote)");
                 }
+                command.CommandText =
+                @$"
+                    INSERT INTO tbl_answers (tbl_user_id)
+                    VALUES(@name)
+                ";
+                command.Parameters.AddWithValue("@name", answersObj.user);
+                command.ExecuteNonQuery();
             }
-            return pollId;
+        }
+        private int CreateUserIfNotExists()
+        {
+            return 1;
         }
     }
 }

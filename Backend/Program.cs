@@ -9,6 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IQuestionService, QuestionService>();
+builder.Services.AddScoped<IAnswerService, AnswerService>();
 builder.Services.AddScoped<IDatabaseService>(s => new DbSqliteEngine("questions02"));
 var app = builder.Build();
 
@@ -22,5 +23,6 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.RegisterQuestionsEndpoints();
 app.RegisterPollsEndpoints();
+app.RegisterAnswersEndpoints();
 
 app.Run();

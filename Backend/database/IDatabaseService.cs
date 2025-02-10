@@ -8,6 +8,6 @@ namespace Backend.database
         Task<IEnumerable<QuestionDTO>> SelectQuestions(string pollKey);
         Task InsertPoll(string name);
         Task<IEnumerable<string>> GetAllPolls();
-        Task PostAnswer(Answer answer);
+        Task PostAnswers(AnswerDbObject answers);
     }
 }
