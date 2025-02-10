@@ -88,13 +88,16 @@ namespace Backend.database
             {
                 connection.Open();
                 var command = connection.CreateCommand();
-                var pollId = IdFromPollKeyExecuteCommand(command, pollKey);
+                //var pollId = IdFromPollKeyExecuteCommand(command, pollKey);
                 command.CommandText =
                 @$"
                     SELECT qkey, text
-                    FROM tbl_question WHERE tbl_poll_id = @pollId
+                    FROM tbl_question 
+                    INNER JOIN tbl_poll WHERE tbl_poll.id = tbl_question.tbl_poll_id
+                    AND tbl_poll.name = @pollKey
                 ";
-                command.Parameters.AddWithValue("@pollId", pollId);
+                //command.Parameters.AddWithValue("@pollId", pollId);
+                command.Parameters.AddWithValue("@pollKey", pollKey);
                 using var reader = command.ExecuteReader();
                 while (reader.Read())
                 {
