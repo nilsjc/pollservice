@@ -9,6 +9,24 @@ namespace Backend.database
         {
             service = databaseService;
         }
+
+        public async Task<AllAnswerDTO> GetAllAnswers(string pollKey)
+        {
+            var allAnswers = await service.GetAllAnswers(pollKey);
+            const char SPACE = ' ';
+            string pollName = string.Empty;
+            List<string> questions = [];
+            List<int> answers = [];
+            foreach(var ans in allAnswers)
+            {
+                var values = ans.Split(SPACE);
+                pollName = values[1];
+                questions.Add(values[2]);
+                answers.Add(int.Parse(values[3]));
+            }
+            return new AllAnswerDTO(pollName, questions, answers);
+        }
+
         public async Task PostAnswers(AnswersDTO dto, string ipaddress)
         {
             var answers = dto.QKeys.Zip(dto.Answers, (k, v) => new { k, v })

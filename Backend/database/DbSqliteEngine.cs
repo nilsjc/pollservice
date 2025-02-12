@@ -295,7 +295,7 @@ namespace Backend.database
             return id;
         }
 
-        public async Task<IEnumerable<string>> GetAnswers(string pollId)
+        public async Task<IEnumerable<string>> GetAllAnswers(string pollId)
         {
             List<string> result = [];
             using (var connection = new SqliteConnection($"Data Source={DbName}"))
@@ -304,24 +304,29 @@ namespace Backend.database
                 var command = connection.CreateCommand();
                 command.CommandText =
                 @$"
-                    SELECT tbl_user_id.name, tbl_poll.name, tbl_question.qkey, value  
-                    FROM tbl_answer
-                    INNER JOIN tbl_user WHERE tbl_user.id = tbl_answer.tbl_user_id
-                    INNER JOIN tbl_question WHERE tbl_question.id = tbl_answer.tbl_question_id
-                    INNER JOIN tbl_poll WHERE tbl_poll.id = tbl_question.tbl_poll_id
+                    SELECT tbl_user.name, tbl_poll.name, tbl_question.qkey, SUM(tbl_answer.value)  
+                    FROM tbl_answer 
+                    INNER JOIN tbl_user , tbl_question , tbl_poll 
+                    WHERE tbl_user.id = tbl_answer.tbl_user_id
+                    AND tbl_question.id = tbl_answer.tbl_question_id
+                    AND tbl_poll.id = tbl_question.tbl_poll_id
+                    AND tbl_poll.name = $pollKey
+                    GROUP BY tbl_question.qkey
                 ";
+                command.Parameters.AddWithValue("$pollKey", pollId);
                 using var reader = command.ExecuteReader();
+                const char SPACE = ' ';
                 while (reader.Read())
                 {
                     StringBuilder sb = new();
                     sb.Append(reader.GetString(0));
-                    sb.Append(", ");
+                    sb.Append(SPACE);
                     sb.Append(reader.GetString(1));
-                    sb.Append(", ");
+                    sb.Append(SPACE);
                     sb.Append(reader.GetString(2));
-                    sb.Append(", ");
+                    sb.Append(SPACE);
                     sb.Append(reader.GetInt32(3));
-                    sb.Append(", ");
+                    sb.Append(SPACE);
                     result.Add(sb.ToString());
                 }
             }

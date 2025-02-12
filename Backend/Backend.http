@@ -31,3 +31,7 @@ Content-Type: application/json
     "Answers" : [1,2,3,4],
     "QKeys" : ["Q1","Q2","Q3","Q4"]
 }
+
+### get all answers
+GET {{Backend_HostAddress}}/Answers?pollkey={{pollkey}}
+Content-Type: application/json
