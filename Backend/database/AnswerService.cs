@@ -27,12 +27,18 @@ namespace Backend.database
             return new AllAnswerDTO(pollName, questions, answers);
         }
 
-        public async Task PostAnswers(AnswersDTO dto, string ipaddress)
+        public async Task<int> PostAnswers(AnswersDTO dto, string ipaddress, int answCount)
         {
+            var keys = await service.CountQuestions(dto.PollKey);
+            if(keys != answCount)
+            {
+                return -1;
+            }
             var answers = dto.QKeys.Zip(dto.Answers, (k, v) => new { k, v })
               .ToDictionary(x => x.k, x => x.v);
             var answerDbObject = new AnswerDbObject(dto.PollKey, answers, dto.User);
             await service.PostAnswers(answerDbObject);
+            return 0;
         }
     }
 }

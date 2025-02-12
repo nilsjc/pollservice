@@ -1,10 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Metadata.Ecma335;
-using System.Runtime.CompilerServices;
 using System.Text;
-using System.Threading.Tasks;
 using Backend.Models;
 using Microsoft.Data.Sqlite;
 
@@ -32,7 +26,7 @@ namespace Backend.database
                 CREATE TABLE IF NOT EXISTS tbl_question 
                 (id INTEGER PRIMARY KEY,
                 tbl_poll_id INTEGER, 
-                qkey TEXT UNIQUE, 
+                qkey TEXT, 
                 text TEXT, 
                 FOREIGN KEY(tbl_poll_id) REFERENCES tbl_poll(id)
                 );
@@ -151,10 +145,6 @@ namespace Backend.database
             {
                 connection.Open();
                 var command = connection.CreateCommand();
-                // if(CheckIfUserExists(command, answersObj.userName)==0)
-                // {
-
-                // }
                 var userId = CreateUserIfNotExists(command, answersObj.userName);
                 var questionIds = GetQuestionQkeyWithIds(command, answersObj.PollKey);
                 command.CommandText =
@@ -207,44 +197,6 @@ namespace Backend.database
             }
             return result;
         }
-
-        private int GetQuestionId(SqliteCommand command, string pollKey, string qkey)
-        {
-            command.CommandText = 
-            @"SELECT id FROM tbl_question 
-            INNER JOIN tbl_poll 
-            WHERE tbl_poll.id = tbl_question.tbl_poll_id 
-            AND tbl_poll.name = @pollname
-            AND tbl_question.qkey = @qkey";
-
-            command.Parameters.AddWithValue("@pollname", pollKey);
-            command.Parameters.AddWithValue("@qkey", qkey);
-
-            int result = 0;
-            using(var reader = command.ExecuteReader())
-            {
-                while (reader.Read())
-                {
-                    result = reader.GetInt32(0);
-                }
-            }
-            return result;
-        }
-        private int CheckIfUserExists(SqliteCommand command, string userName)
-        {
-            int result = -1;
-            command.CommandText = "SELECT exists(SELECT 1 FROM tbl_user WHERE name = @name) AS row_exists;";
-            command.Parameters.AddWithValue("@name", userName);
-            using(var reader = command.ExecuteReader())
-            {
-                while (reader.Read())
-                {
-                    result = reader.GetInt32(0);
-                }
-            }
-            return result;
-        }
-
         /// <summary>
         /// Creates a new user if not exists. Will always return the user id.
         /// </summary>
@@ -272,19 +224,14 @@ namespace Backend.database
             {
                 command.CommandText = 
                 @"INSERT INTO tbl_user (name) 
-                VALUES ('@username');";
+                VALUES ($username);";
 
-                command.Parameters.AddWithValue("@username", userName);
+                command.Parameters.AddWithValue("$username", userName);
                 command.ExecuteNonQuery();
             }
             int id = 0;
             command.CommandText = "SELECT id FROM tbl_user WHERE name = $usrnme";
-            // command.CommandText = "SELECT id FROM tbl_user WHERE name = '@name';";
             command.Parameters.AddWithValue("$usrnme", userName);
-            // string tmp = command.CommandText.ToString();
-            // foreach (SqliteParameter p in command.Parameters) {
-            //     tmp = tmp.Replace('@' + p.ParameterName.ToString(),"'" + p.Value.ToString() + "'");
-            // }
             using(var reader = command.ExecuteReader())
             {
                 while (reader.Read())
@@ -328,6 +275,31 @@ namespace Backend.database
                     sb.Append(reader.GetInt32(3));
                     sb.Append(SPACE);
                     result.Add(sb.ToString());
+                }
+            }
+            return result;
+        }
+
+        public async Task<int> CountQuestions(string pollkey)
+        {
+            int result = 0;
+            using (var connection = new SqliteConnection($"Data Source={DbName}"))
+            {
+                connection.Open();
+                var command = connection.CreateCommand();
+                command.CommandText =
+                @$"
+                    SELECT COUNT(tbl_question.text)
+                    FROM tbl_question
+                    JOIN tbl_poll 
+                    WHERE tbl_poll.id = tbl_question.tbl_poll_id
+                    AND tbl_poll.name = $pollkey
+                ";
+                command.Parameters.AddWithValue("$pollkey", pollkey);
+                using var reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    result = reader.GetInt32(0);
                 }
             }
             return result;

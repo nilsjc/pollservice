@@ -10,5 +10,6 @@ namespace Backend.database
         Task<IEnumerable<string>> GetAllPolls();
         Task PostAnswers(AnswerDbObject answers);
         Task<IEnumerable<string>> GetAllAnswers(string pollId);
+        Task<int> CountQuestions(string pollkey);
     }
 }
