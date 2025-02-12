@@ -26,7 +26,8 @@ POST {{Backend_HostAddress}}/Answers
 Content-Type: application/json
 
 {
+    "User" : "Adamasky",
     "PollKey" : "{{pollkey}}",
-    "Answers" : [1,2,3,4,5],
-    "QKeys" : ["Q1","Q2","Q3","Q4","Q5"]
+    "Answers" : [1,2,3,4],
+    "QKeys" : ["Q1","Q2","Q3","Q4"]
 }

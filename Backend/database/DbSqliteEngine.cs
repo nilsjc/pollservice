@@ -150,25 +150,182 @@ namespace Backend.database
             using (var connection = new SqliteConnection($"Data Source={DbName}"))
             {
                 connection.Open();
-                var userId = CreateUserIfNotExists();
                 var command = connection.CreateCommand();
-                StringBuilder sb = new();
-                foreach (var answer in answersObj.Answers)
-                {
-                    sb.Append("(@qkey,@vote)");
-                }
+                // if(CheckIfUserExists(command, answersObj.userName)==0)
+                // {
+
+                // }
+                var userId = CreateUserIfNotExists(command, answersObj.userName);
+                var questionIds = GetQuestionQkeyWithIds(command, answersObj.PollKey);
                 command.CommandText =
                 @$"
-                    INSERT INTO tbl_answers (tbl_user_id)
-                    VALUES(@name)
+                    INSERT INTO tbl_answer (tbl_user_id, tbl_question_id, value)
+                    VALUES 
                 ";
-                command.Parameters.AddWithValue("@name", answersObj.user);
+
+                StringBuilder sb = new();
+                int count = 1;
+                var dateTimeNow = DateTime.Now.ToString();
+                foreach (var answer in answersObj.Answers)
+                {
+                    sb.Append($"($userid{count}, $qid{count}, $vote{count}),");
+                    count++;
+                }
+                sb.Remove(sb.Length-1,1); // removing the last comma
+                sb.Append(";");
+                command.CommandText += sb.ToString();
+                int x = 1;
+                foreach (var answer in answersObj.Answers)
+                {
+                    command.Parameters.AddWithValue($"$userid{x}", userId);
+                    var questionId = questionIds.SingleOrDefault(x => x.Item2 == answer.Key);
+                    command.Parameters.AddWithValue($"$qid{x}", questionId.Item1);
+                    command.Parameters.AddWithValue($"$vote{x}", answer.Value);
+                    //command.Parameters.AddWithValue("@datetime", dateTimeNow);
+                    x++;
+                }
                 command.ExecuteNonQuery();
             }
         }
-        private int CreateUserIfNotExists()
+        private List<(int,string)> GetQuestionQkeyWithIds(SqliteCommand command, string pollKey)
         {
-            return 1;
+            command.CommandText = 
+            @"SELECT tbl_question.id, tbl_question.qkey FROM tbl_question 
+            INNER JOIN tbl_poll 
+            WHERE tbl_poll.id = tbl_question.tbl_poll_id 
+            AND tbl_poll.name = @pollname";
+
+            command.Parameters.AddWithValue("@pollname", pollKey);
+
+            List<(int,string)> result = [];
+            using(var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    result.Add((reader.GetInt32(0),reader.GetString(1)));
+                }
+            }
+            return result;
+        }
+
+        private int GetQuestionId(SqliteCommand command, string pollKey, string qkey)
+        {
+            command.CommandText = 
+            @"SELECT id FROM tbl_question 
+            INNER JOIN tbl_poll 
+            WHERE tbl_poll.id = tbl_question.tbl_poll_id 
+            AND tbl_poll.name = @pollname
+            AND tbl_question.qkey = @qkey";
+
+            command.Parameters.AddWithValue("@pollname", pollKey);
+            command.Parameters.AddWithValue("@qkey", qkey);
+
+            int result = 0;
+            using(var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    result = reader.GetInt32(0);
+                }
+            }
+            return result;
+        }
+        private int CheckIfUserExists(SqliteCommand command, string userName)
+        {
+            int result = -1;
+            command.CommandText = "SELECT exists(SELECT 1 FROM tbl_user WHERE name = @name) AS row_exists;";
+            command.Parameters.AddWithValue("@name", userName);
+            using(var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    result = reader.GetInt32(0);
+                }
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Creates a new user if not exists. Will always return the user id.
+        /// </summary>
+        /// <param name="command"></param>
+        /// <param name="userName"></param>
+        /// <returns></returns> <summary>
+        /// 
+        /// </summary>
+        /// <param name="command"></param>
+        /// <param name="userName"></param>
+        /// <returns></returns>
+        private int CreateUserIfNotExists(SqliteCommand command, string userName)
+        {
+            int result = 1;
+            command.CommandText = "SELECT exists(SELECT 1 FROM tbl_user WHERE name = @name) AS row_exists;";
+            command.Parameters.AddWithValue("@name", userName);
+            using(var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    result = reader.GetInt32(0);
+                }
+            }
+            if(result == 0)
+            {
+                command.CommandText = 
+                @"INSERT INTO tbl_user (name) 
+                VALUES ('@username');";
+
+                command.Parameters.AddWithValue("@username", userName);
+                command.ExecuteNonQuery();
+            }
+            int id = 0;
+            command.CommandText = "SELECT id FROM tbl_user WHERE name = $usrnme";
+            // command.CommandText = "SELECT id FROM tbl_user WHERE name = '@name';";
+            command.Parameters.AddWithValue("$usrnme", userName);
+            // string tmp = command.CommandText.ToString();
+            // foreach (SqliteParameter p in command.Parameters) {
+            //     tmp = tmp.Replace('@' + p.ParameterName.ToString(),"'" + p.Value.ToString() + "'");
+            // }
+            using(var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    id = reader.GetInt32(0);
+                }
+            }
+            return id;
+        }
+
+        public async Task<IEnumerable<string>> GetAnswers(string pollId)
+        {
+            List<string> result = [];
+            using (var connection = new SqliteConnection($"Data Source={DbName}"))
+            {
+              connection.Open();
+                var command = connection.CreateCommand();
+                command.CommandText =
+                @$"
+                    SELECT tbl_user_id.name, tbl_poll.name, tbl_question.qkey, value  
+                    FROM tbl_answer
+                    INNER JOIN tbl_user WHERE tbl_user.id = tbl_answer.tbl_user_id
+                    INNER JOIN tbl_question WHERE tbl_question.id = tbl_answer.tbl_question_id
+                    INNER JOIN tbl_poll WHERE tbl_poll.id = tbl_question.tbl_poll_id
+                ";
+                using var reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    StringBuilder sb = new();
+                    sb.Append(reader.GetString(0));
+                    sb.Append(", ");
+                    sb.Append(reader.GetString(1));
+                    sb.Append(", ");
+                    sb.Append(reader.GetString(2));
+                    sb.Append(", ");
+                    sb.Append(reader.GetInt32(3));
+                    sb.Append(", ");
+                    result.Add(sb.ToString());
+                }
+            }
+            return result;
         }
     }
 }

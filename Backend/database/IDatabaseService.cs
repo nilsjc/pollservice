@@ -9,5 +9,6 @@ namespace Backend.database
         Task InsertPoll(string name);
         Task<IEnumerable<string>> GetAllPolls();
         Task PostAnswers(AnswerDbObject answers);
+        Task<IEnumerable<string>> GetAnswers(string pollId);
     }
 }

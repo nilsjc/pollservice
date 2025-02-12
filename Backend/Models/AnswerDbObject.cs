@@ -5,5 +5,5 @@ using System.Threading.Tasks;
 
 namespace Backend.Models
 {
-    public record AnswerDbObject(string PollKey, Dictionary<string, int> Answers, string user);
+    public record AnswerDbObject(string PollKey, Dictionary<string, int> Answers, string userName);
 }
