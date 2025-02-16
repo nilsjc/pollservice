@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <div>
+    Vad ska undersökningen heta?<br>
+    <input id="pollkey"><br>
+    Hur många frågor?<br>
+    <input id="questionnumbers"><br>
+    <button onclick="writeQuestions()">skapa</button><br>
+        <div id="inputfields"></div>
+    </div>
+    <script>
+        
+    function writeQuestions()
+    {
+        document.getElementById("inputfields").innerHTML = '';
+        let numbers = parseInt(document.getElementById("questionnumbers").value);
+        let x=0;
+        const inputFieldElement = document.getElementById("inputfields");
+        for(x=1; x <= numbers; x++)
+        {
+            const pn = document.createElement("p");
+            const tnode = document.createTextNode("Q" + (x));
+            pn.appendChild(tnode);
+            inputFieldElement.appendChild(pn);
+            const qinp = document.createElement("input");
+            qinp.id = `qinp${x}`
+            inputFieldElement.appendChild(qinp);
+            const nwline = document.createElement("br");
+            inputFieldElement.appendChild(nwline);
+        }
+        const sendButton = document.createElement("button");
+        sendButton.innerHTML = "spara alla frågor";
+        sendButton.onclick = storeQuestions;
+        inputFieldElement.appendChild(sendButton);
+    }
+    function storeQuestions()
+    {
+        // fetch qinp1 ... n
+        const inputFieldElement = document.getElementById("inputfields");
+        let numbers = parseInt(document.getElementById("questionnumbers").value);
+        let x = 0;
+        const array = [];
+        for(x=1;x<=numbers;x++)
+        {
+            const qvalue = document.getElementById(`qinp${x}`).value;
+            const pair = {key: `q${x}`, data: qvalue}; 
+            array.push(pair);
+        }
+        const pollName = document.getElementById("pollkey").value
+        const objectToPush = 
+        {
+            questions: array,
+            key: pollName
+        };
+        console.log(JSON.stringify(objectToPush))
+        postData(objectToPush);
+
+    }
+    async function postData(objectToPush)
+    {
+        const url = `http://localhost:5170/Questions`;
+        try {
+            const response = await fetch(url,{
+                method: "POST",
+                body: JSON.stringify(objectToPush),
+                headers: {"Content-type": "application/json; charset=UTF-8"}
+            });
+            if (!response.ok) {
+            throw new Error(`Response status: ${response.status}`);
+            }
+            const json = await response.json();
+            console.log(json);
+            return json;
+            } catch (error) {
+                console.error(error.message);
+            }
+    }
+    </script>
+</body>
+</html>

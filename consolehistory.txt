@@ -3,3 +3,4 @@ dotnet sln add Backend\Backend.csproj
 cd Backend
 dotnet dev-certs https --trust
 (installing rest client in vs code)
+dotnet add package Microsoft.Data.Sqlite

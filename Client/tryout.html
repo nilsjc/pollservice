@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <div>
+    Vilken undersökning?<br>
+    <input id="pollkeyinput"><br>
+    Vad heter du?<br>
+    <input id="questionnumbers"><br>
+    <button onclick="startGallup()">delta</button><br>
+        <div id="inputfields"></div>
+    </div>
+    <script>
+        
+    async function startGallup()
+    {
+        const questionsBlob = await getData();
+        let inputelement = document.getElementById("inputfields");
+        inputelement.innerHTML = '';
+        var form = document.createElement("form");
+        form.id = "questionsform";
+        inputelement.appendChild(form);
+        let qst = 1;
+        for(const key in questionsBlob)
+        {
+            // text
+            const paran = document.createElement("p");
+            const tnode = document.createTextNode(questionsBlob[key].text);
+            paran.appendChild(tnode);
+            inputelement.appendChild(paran);
+
+            // radio buttons
+            let r = 0;
+            for(r = 1; r <= 5; r++)
+            {
+                const radiobutton = createRadioElement(`q${qst}`)
+                inputelement.appendChild(radiobutton);
+            }
+            qst++;
+        }
+        const sendButton = document.createElement("button");
+        sendButton.onclick = sendResults;
+        sendButton.innerHTML = "skicka in resultat";
+        inputelement.appendChild(sendButton);
+    }
+
+    async function getData()
+    {
+        const pkey = document.getElementById("pollkeyinput").value;
+        const url = `http://localhost:5170/Questions?pollKey=${pkey}`;
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+            throw new Error(`Response status: ${response.status}`);
+            }
+
+            const json = await response.json();
+            console.log(json);
+            return json;
+            } catch (error) {
+                console.error(error.message);
+            }
+    }
+
+    function createRadioElement(name)
+    {
+        var radioHtml = '<input type="radio" name="' + name + '"';
+        radioHtml += '/>';
+        var radioFragment = document.createElement('div');
+        radioFragment.innerHTML = radioHtml;
+        return radioFragment.firstChild;
+    }
+
+    function sendResults()
+    {
+        const form = document.getElementById('questionsform');
+        const options = form.elements['option'];
+        let selectedOption;
+
+        for (let i = 0; i < options.length; i++) 
+        {
+            if (options[i].checked) {
+                selectedOption = options[i].value;
+                break;
+            }
+        }
+        
+
+    }
+    </script>
+</body>
+</html>
