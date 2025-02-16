@@ -304,5 +304,12 @@ namespace Backend.database
             }
             return result;
         }
+
+        public Task InsertManyQuestions(QuestionDbObject questions)
+        {
+            // this method will
+            // handle poll creation + insert questions
+            throw new NotImplementedException();
+        }
     }
 }

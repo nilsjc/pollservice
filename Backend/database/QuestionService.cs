@@ -22,5 +22,17 @@ namespace Backend.database
         {
             await _service.InsertQuestion(question);
         }
+
+        public async Task InsertClientQuestion(ClientQuestionDTO questDTO)
+        {
+            Dictionary<string,string> quest = new();
+            foreach(var q in questDTO.questions)
+            {
+                quest.Add(q.key, q.data);
+
+            }
+            var dbObject = new QuestionDbObject(quest, questDTO.key);
+            await _service.InsertManyQuestions(dbObject);
+        }
     }
 }

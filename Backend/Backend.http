@@ -35,3 +35,9 @@ Content-Type: application/json
 ### get all answers
 GET {{Backend_HostAddress}}/Answers?pollkey={{pollkey}}
 Content-Type: application/json
+
+### post all questions from client
+POST {{Backend_HostAddress}}/Questions
+Content-Type: application/json
+
+{"data":[["q1","gillar du grönt?"],["q2","gillar du rött?"]],"key":"fnuffenull"}

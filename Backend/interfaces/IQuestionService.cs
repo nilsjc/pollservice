@@ -1,9 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Backend.Models;
-using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace Backend.interfaces
 {
@@ -11,5 +6,6 @@ namespace Backend.interfaces
     {
         Task<IEnumerable<QuestionDTO>> SelectQuestions(string key);
         Task InsertQuestion(QuestionDTO question);
+        Task InsertClientQuestion(ClientQuestionDTO questDTO);
     }
 }
