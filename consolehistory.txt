@@ -1,11 +1,26 @@
 dotnet new webapi -n Backend
+
 dotnet sln add Backend\Backend.csproj  
+
 cd Backend
+
 dotnet dev-certs https --trust
+
 (installing rest client in vs code)
 dotnet add package Microsoft.Data.Sqlite
+
 
 npm create vite@latest
 cd .\client-react\
 npm install
 npm run dev
+
+# in backend, installing EntityFrameworkCore:
+dotnet tool install --global dotnet-ef
+dotnet add package Microsoft.EntityFrameworkCore.Design
+dotnet ef migrations add InitialCreate
+dotnet ef database update
+
+dotnet ef migrations add InitialCreate
+
+dotnet ef database update

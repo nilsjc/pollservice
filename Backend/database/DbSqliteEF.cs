@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Backend.Models;
+using Microsoft.OpenApi.Validations;
 
 namespace Backend.database
 {
@@ -23,9 +24,26 @@ namespace Backend.database
             throw new NotImplementedException();
         }
 
-        public Task InsertManyQuestions(QuestionDbObject questions)
+        public async Task InsertManyQuestions(QuestionDbObject questions)
         {
-            throw new NotImplementedException();
+            using var db = new PollContext();
+            var poll = db.Polls.SingleOrDefault(x => x.name == questions.pollKey);
+            if(poll is null)
+            {
+                return;
+            }
+
+            List<tbl_question> questionsList = [];
+            foreach(var q in questions.Questions)
+            {
+                questionsList.Add(new tbl_question
+                {
+                    tbl_poll_id = poll.id,
+                    qkey = q.Key,
+                    text = q.Value
+                });
+            }
+            db.Questions.AddRange(questionsList);
         }
 
         public Task InsertPoll(string name)
